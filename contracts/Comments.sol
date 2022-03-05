@@ -1,29 +1,36 @@
-import * as React from "react";
-import { Box, Spinner, Stack, Center } from "@chakra-ui/react";
-import useComments from "../hooks/useComments";
-import Comment from "./Comment";
+//SPDX-License-Identifier: Unlicense
+pragma solidity ^0.8.0;
 
-interface CommentsProps {
-  topic: string;
+import "hardhat/console.sol";
+
+contract Comments {
+    struct Comment {
+        uint32 id;
+        string topic;
+        address creator_address;
+        string message;
+        uint created_at;
+    }
+
+    uint32 private idCounter;
+    mapping(string => Comment[]) private commentsByTopic;
+        
+    event CommentAdded(Comment comment);
+
+    function getComments(string calldata topic) public view returns(Comment[] memory) {
+       return commentsByTopic[topic];
+    }
+
+    function addComment(string calldata topic, string calldata message) public {
+        Comment memory comment = Comment({
+            id: idCounter,
+            topic: topic,
+            creator_address: msg.sender,
+            message: message,
+            created_at: block.timestamp
+        });
+        commentsByTopic[topic].push(comment);
+        idCounter++;
+        emit CommentAdded(comment);
+    }
 }
-
-const Comments: React.FunctionComponent<CommentsProps> = ({ topic }) => {
-  const query = useComments({ topic });
-
-  return (
-    <Box>
-      {query.isLoading && (
-        <Center p={8}>
-          <Spinner />
-        </Center>
-      )}
-      <Stack spacing={4}>
-        {query.data?.map((comment) => (
-          <Comment key={comment.id} comment={comment} />
-        ))}
-      </Stack>
-    </Box>
-  );
-};
-
-export default Comments;
